@@ -60,6 +60,15 @@
             padding: 10px;
             margin: 20px 0;
         }
+        /* Curseur clignotant */
+        .typewriter-caret::after {
+            content: "▌";
+            animation: caret 1s steps(1) infinite;
+        }
+        @keyframes caret {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
     </style>
 </head>
 <body>
@@ -138,6 +147,28 @@
 </div>
 
 <script>
+// --- Machine à écrire ---
+function typeText(targetEl, text, speed = 25, onDone) {
+    let i = 0;
+    const caretClass = 'typewriter-caret';
+    targetEl.classList.add(caretClass);
+
+    const step = () => {
+        targetEl.textContent = text.slice(0, i + 1);
+        i++;
+        const chat = document.getElementById('chat');
+        chat.scrollTop = chat.scrollHeight;
+
+        if (i < text.length) {
+            setTimeout(step, speed);
+        } else {
+            targetEl.classList.remove(caretClass);
+            onDone && onDone();
+        }
+    };
+    step();
+}
+
 // Variables globales
 let currentQ = 0;
 let score = 50;
@@ -171,14 +202,10 @@ const responses = [
 function startTest() {
     document.getElementById('home').classList.add('hidden');
     document.getElementById('test').classList.remove('hidden');
-    
-    // Démarrer le timer
     timerInterval = setInterval(() => {
         timer++;
         document.getElementById('timer').textContent = Math.floor(timer/60) + ':' + (timer%60).toString().padStart(2,'0');
     }, 1000);
-    
-    // Première question après 2 secondes
     setTimeout(() => {
         addMessage('TURINGBOT', questions[0]);
     }, 2000);
@@ -192,40 +219,49 @@ function addMessage(who, text, analysis) {
     const chat = document.getElementById('chat');
     const time = new Date().toLocaleTimeString();
     const color = who === 'TURINGBOT' ? 'cyan' : 'yellow';
-    
-    let msg = `<div class="message">`;
-    msg += `<div style="color: ${color};">[${who}] ${time}</div>`;
-    msg += `<div>&gt; ${text}</div>`;
-    if (analysis && showAnalysis) {
-        msg += `<div style="color: orange; font-size: 12px; margin-top: 5px;">[ANALYSE] ${analysis}</div>`;
-    }
-    msg += `</div>`;
-    
-    chat.innerHTML += msg;
+
+    const wrap = document.createElement('div');
+    wrap.className = 'message';
+
+    const header = document.createElement('div');
+    header.style.color = color;
+    header.textContent = `[${who}] ${time}`;
+
+    const body = document.createElement('div');
+    body.textContent = '> ';
+
+    const analysisEl = document.createElement('div');
+    analysisEl.style.color = 'orange';
+    analysisEl.style.fontSize = '12px';
+    analysisEl.style.marginTop = '5px';
+    analysisEl.style.display = 'none';
+
+    wrap.appendChild(header);
+    wrap.appendChild(body);
+    wrap.appendChild(analysisEl);
+    chat.appendChild(wrap);
     chat.scrollTop = chat.scrollHeight;
+
+    if (who === 'TURINGBOT') {
+        typeText(body, `> ${text}`, 25, () => {
+            if (analysis && showAnalysis) {
+                analysisEl.textContent = `[ANALYSE] ${analysis}`;
+                analysisEl.style.display = 'block';
+                chat.scrollTop = chat.scrollHeight;
+            }
+        });
+    } else {
+        body.textContent = `> ${text}`;
+    }
 }
 
 function analyzeText(text) {
     let points = 0;
     let analysis = [];
-    
-    if (text.length > 50) {
-        points += 15;
-        analysis.push("Réponse détaillée (+15)");
-    }
-    if (text.includes('je') || text.includes('mon') || text.includes('ma')) {
-        points += 15;
-        analysis.push("Personnel (+15)");
-    }
-    if (/\b(bien|mal|content|triste|heureux)\b/i.test(text)) {
-        points += 20;
-        analysis.push("Émotions (+20)");
-    }
-    if (text.includes('?')) {
-        points += 10;
-        analysis.push("Question (+10)");
-    }
-    
+    if (text.length > 50) { points += 15; analysis.push("Réponse détaillée (+15)"); }
+    if (text.includes('je') || text.includes('mon') || text.includes('ma')) { points += 15; analysis.push("Personnel (+15)"); }
+    if (/\b(bien|mal|content|triste|heureux)\b/i.test(text)) { points += 20; analysis.push("Émotions (+20)"); }
+    if (text.includes('?')) { points += 10; analysis.push("Question (+10)"); }
     return { points, analysis: analysis.join(', ') };
 }
 
@@ -233,22 +269,14 @@ function sendMessage() {
     const input = document.getElementById('input');
     const text = input.value.trim();
     if (!text) return;
-    
-    // Message utilisateur
     addMessage('VOUS', text);
     input.value = '';
     input.disabled = true;
-    
-    // Analyse
     const result = analyzeText(text);
     score = Math.max(0, Math.min(100, score + result.points - 25));
     document.getElementById('score').textContent = score;
-    
-    // Réponse du bot
     setTimeout(() => {
         addMessage('TURINGBOT', responses[currentQ], result.analysis);
-        
-        // Question suivante ou fin
         if (currentQ < questions.length - 1) {
             setTimeout(() => {
                 currentQ++;
@@ -258,13 +286,11 @@ function sendMessage() {
                 input.focus();
             }, 2000);
         } else {
-            // Fin du test
             setTimeout(() => {
                 let verdict = `VERDICT FINAL - Score: ${score}/100 - `;
                 if (score > 70) verdict += "HUMAIN CONFIRMÉ ! Bravo !";
                 else if (score > 40) verdict += "Résultat mitigé.";
                 else verdict += "Comportement suspect... Êtes-vous une IA ?";
-                
                 addMessage('TURINGBOT', verdict + " Merci pour ce test !");
                 clearInterval(timerInterval);
             }, 2000);
@@ -277,7 +303,7 @@ function toggleAnalysis() {
     document.querySelector('button[onclick="toggleAnalysis()"]').textContent = 'ANALYSE: ' + (showAnalysis ? 'ON' : 'OFF');
 }
 
-// Style clignotant
+// Style clignotant bouton démarrage
 const style = document.createElement('style');
 style.textContent = '@keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0.5; } }';
 document.head.appendChild(style);
