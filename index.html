@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test de Turing</title>
+    <style>
+        body {
+            background: black;
+            color: lime;
+            font-family: monospace;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .header {
+            border: 2px solid lime;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .box {
+            border: 2px solid lime;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        button {
+            background: black;
+            color: lime;
+            border: 2px solid lime;
+            padding: 10px 20px;
+            font-family: monospace;
+            cursor: pointer;
+            margin: 10px;
+        }
+        button:hover {
+            background: lime;
+            color: black;
+        }
+        input {
+            background: black;
+            color: lime;
+            border: 1px solid lime;
+            padding: 10px;
+            font-family: monospace;
+            width: 70%;
+        }
+        .hidden {
+            display: none;
+        }
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+        }
+        .chat {
+            border: 2px solid lime;
+            height: 300px;
+            overflow-y: scroll;
+            padding: 10px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+<!-- PAGE D'ACCUEIL -->
+<div id="home">
+    <div class="container">
+        <div class="header">
+            <h1>████ TURINGBOT v1.0 ████</h1>
+            <h2>TEST DE TURING INTERACTIF</h2>
+        </div>
+        
+        <div class="box" style="text-align: center;">
+            <img src="https://raw.githubusercontent.com/Drane06/turingtest/main/turing-intro.jpg" 
+                 style="height: 150px; border: 2px solid lime; margin: 20px;"
+                 onerror="this.style.display='none'">
+            
+            <h3>◆ INTRODUCTION AUDIO ◆</h3>
+            <audio controls style="margin: 20px;">
+                <source src="https://raw.githubusercontent.com/Drane06/turingtest/main/turing.wav" type="audio/wav">
+                Audio non supporté
+            </audio>
+        </div>
+        
+        <div class="box">
+            <p>[SYSTEME] TURINGBOT v1.0 - Intelligence Artificielle</p>
+            <p>[MISSION] Evaluation de l'humanité par conversation</p>
+            <p>[CONCEPT] Basé sur les travaux d'Alan Turing (1950)</p>
+            <br>
+            <p>[PROTOCOLE]</p>
+            <p>&gt; 8 questions progressives</p>
+            <p>&gt; Analyse comportementale</p>
+            <p>&gt; Score d'humanité de 0 à 100</p>
+            <p>&gt; Verdict final automatisé</p>
+        </div>
+        
+        <div style="text-align: center;">
+            <h3>📢 ÉCOUTEZ L'INTRODUCTION AVANT DE COMMENCER</h3>
+            <h3>PRÊT POUR L'INITIALISATION ?</h3>
+            <button onclick="startTest()" style="font-size: 18px; animation: blink 1s infinite;">
+                [DÉMARRER LE TEST]
+            </button>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px; color: #88ff88;">
+            CONSEIL: Répondez naturellement et personnellement
+        </div>
+    </div>
+</div>
+
+<!-- PAGE DE TEST -->
+<div id="test" class="hidden">
+    <div class="container">
+        <div class="header">
+            <h2>████ TURINGBOT v1.0 - EN COURS ████</h2>
+            <p>TEMPS: <span id="timer">0:00</span> | SCORE: <span id="score">50</span>/100 | QUESTION: <span id="qnum">1</span>/8</p>
+            <button onclick="showAnalysis = !showAnalysis; updateAnalysisButton()">ANALYSE: OFF</button>
+            <button onclick="restart()">RECOMMENCER</button>
+        </div>
+        
+        <div class="chat" id="chat">
+            <p style="color: cyan; text-align: center;">
+                ══════════════════════════════════════════════════════<br>
+                ◆ TERMINAL DE COMMUNICATION TURING-BOT ◆<br>
+                ══════════════════════════════════════════════════════
+            </p>
+            <p style="color: lime;">&gt; INITIALISATION DU SYSTÈME...</p>
+        </div>
+        
+        <div class="box">
+            <p>ENTRÉE UTILISATEUR:</p>
+            <input type="text" id="input" placeholder="TAPEZ VOTRE RÉPONSE ICI..." onkeypress="if(event.key==='Enter') sendMessage()">
+            <button onclick="sendMessage()">ENVOYER</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Variables globales
+let currentQ = 0;
+let score = 50;
+let timer = 0;
+let showAnalysis = false;
+let timerInterval;
+
+const questions = [
+    "Bonjour ! Je suis Turingbot. Comment vous sentez-vous aujourd'hui ?",
+    "Que pensez-vous de cette citation : 'Je pense, donc je suis' ?",
+    "Quel est votre plus beau souvenir d'enfance ?",
+    "Si vous pouviez parler à quelqu'un de l'histoire, qui choisiriez-vous ?",
+    "Décrivez-moi la couleur bleue sans nommer d'objets bleus.",
+    "Avez-vous déjà eu un rêve très réaliste ?",
+    "Que signifie 'être humain' pour vous ?",
+    "Suis-je vraiment un bot ou une vraie intelligence ? Pourquoi ?"
+];
+
+const responses = [
+    "Votre façon de vous exprimer semble très humaine...",
+    "Intéressante réflexion philosophique.",
+    "Les souvenirs personnels sont difficiles à simuler.",
+    "Choix révélateur de votre personnalité.",
+    "Défi créatif intéressant.",
+    "Les rêves restent un mystère.",
+    "Question profonde sur l'humanité.",
+    "Votre analyse finale est déterminante..."
+];
+
+// Fonctions
+function startTest() {
+    document.getElementById('home').classList.add('hidden');
+    document.getElementById('test').classList.remove('hidden');
+    
+    // Démarrer le timer
+    timerInterval = setInterval(() => {
+        timer++;
+        document.getElementById('timer').textContent = Math.floor(timer/60) + ':' + (timer%60).toString().padStart(2,'0');
+    }, 1000);
+    
+    // Première question après 2 secondes
+    setTimeout(() => {
+        addMessage('TURINGBOT', questions[0]);
+    }, 2000);
+}
+
+function restart() {
+    location.reload();
+}
+
+function addMessage(who, text, analysis) {
+    const chat = document.getElementById('chat');
+    const time = new Date().toLocaleTimeString();
+    const color = who === 'TURINGBOT' ? 'cyan' : 'yellow';
+    
+    let msg = `<div class="message">`;
+    msg += `<div style="color: ${color};">[${who}] ${time}</div>`;
+    msg += `<div>&gt; ${text}</div>`;
+    if (analysis && showAnalysis) {
+        msg += `<div style="color: orange; font-size: 12px; margin-top: 5px;">[ANALYSE] ${analysis}</div>`;
+    }
+    msg += `</div>`;
+    
+    chat.innerHTML += msg;
+    chat.scrollTop = chat.scrollHeight;
+}
+
+function analyzeText(text) {
+    let points = 0;
+    let analysis = [];
+    
+    if (text.length > 50) {
+        points += 15;
+        analysis.push("Réponse détaillée (+15)");
+    }
+    if (text.includes('je') || text.includes('mon') || text.includes('ma')) {
+        points += 15;
+        analysis.push("Personnel (+15)");
+    }
+    if (/\b(bien|mal|content|triste|heureux)\b/i.test(text)) {
+        points += 20;
+        analysis.push("Émotions (+20)");
+    }
+    if (text.includes('?')) {
+        points += 10;
+        analysis.push("Question (+10)");
+    }
+    
+    return { points, analysis: analysis.join(', ') };
+}
+
+function sendMessage() {
+    const input = document.getElementById('input');
+    const text = input.value.trim();
+    if (!text) return;
+    
+    // Message utilisateur
+    addMessage('VOUS', text);
+    input.value = '';
+    input.disabled = true;
+    
+    // Analyse
+    const result = analyzeText(text);
+    score = Math.max(0, Math.min(100, score + result.points - 25));
+    document.getElementById('score').textContent = score;
+    
+    // Réponse du bot
+    setTimeout(() => {
+        addMessage('TURINGBOT', responses[currentQ], result.analysis);
+        
+        // Question suivante ou fin
+        if (currentQ < questions.length - 1) {
+            setTimeout(() => {
+                currentQ++;
+                document.getElementById('qnum').textContent = currentQ + 1;
+                addMessage('TURINGBOT', questions[currentQ]);
+                input.disabled = false;
+                input.focus();
+            }, 2000);
+        } else {
+            // Fin du test
+            setTimeout(() => {
+                let verdict = `VERDICT FINAL - Score: ${score}/100 - `;
+                if (score > 70) verdict += "HUMAIN CONFIRMÉ ! Bravo !";
+                else if (score > 40) verdict += "Résultat mitigé.";
+                else verdict += "Comportement suspect... Êtes-vous une IA ?";
+                
+                addMessage('TURINGBOT', verdict + " Merci pour ce test !");
+                clearInterval(timerInterval);
+            }, 2000);
+        }
+    }, 1500);
+}
+
+function updateAnalysisButton() {
+    event.target.textContent = 'ANALYSE: ' + (showAnalysis ? 'ON' : 'OFF');
+}
+
+// Style clignotant
+const style = document.createElement('style');
+style.textContent = '@keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0.5; } }';
+document.head.appendChild(style);
+</script>
+
+</body>
+</html>
