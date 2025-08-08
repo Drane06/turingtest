@@ -73,13 +73,13 @@
         </div>
         
         <div class="box" style="text-align: center;">
-            <img src="https://raw.githubusercontent.com/Drane06/turingtest/main/turing-intro.jpg" 
+            <img src="turing-intro.jpg" 
                  style="height: 150px; border: 2px solid lime; margin: 20px;"
                  onerror="this.style.display='none'">
             
             <h3>◆ INTRODUCTION AUDIO ◆</h3>
             <audio controls style="margin: 20px;">
-                <source src="https://raw.githubusercontent.com/Drane06/turingtest/main/turing.wav" type="audio/wav">
+                <source src="turing.wav" type="audio/wav">
                 Audio non supporté
             </audio>
         </div>
@@ -116,7 +116,7 @@
         <div class="header">
             <h2>████ TURINGBOT v1.0 - EN COURS ████</h2>
             <p>TEMPS: <span id="timer">0:00</span> | SCORE: <span id="score">50</span>/100 | QUESTION: <span id="qnum">1</span>/8</p>
-            <button onclick="showAnalysis = !showAnalysis; updateAnalysisButton()">ANALYSE: OFF</button>
+            <button onclick="toggleAnalysis()">ANALYSE: OFF</button>
             <button onclick="restart()">RECOMMENCER</button>
         </div>
         
@@ -272,8 +272,9 @@ function sendMessage() {
     }, 1500);
 }
 
-function updateAnalysisButton() {
-    event.target.textContent = 'ANALYSE: ' + (showAnalysis ? 'ON' : 'OFF');
+function toggleAnalysis() {
+    showAnalysis = !showAnalysis;
+    document.querySelector('button[onclick="toggleAnalysis()"]').textContent = 'ANALYSE: ' + (showAnalysis ? 'ON' : 'OFF');
 }
 
 // Style clignotant
@@ -284,3 +285,4 @@ document.head.appendChild(style);
 
 </body>
 </html>
+
